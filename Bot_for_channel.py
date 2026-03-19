@@ -1,7 +1,6 @@
 import os
 import re
 import asyncio
-import requests
 from threading import Thread
 from flask import Flask
 from datetime import datetime
@@ -9,25 +8,13 @@ import pytz
 from telegram import Update, MessageEntity
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    MessageHandler,
-    CallbackQueryHandler,
-    filters,
-    ContextTypes,
-)
-
 # ================= FILE IDs =================
 GG_FILE_ID = "BQACAgUAAxkBAAID7mme066zeoD9zp4WUQ5_OdyY4SrVAAKNHAACIAH5VGPU26rszTehOgQ"
 MT_FILE_ID = "BQACAgUAAxkBAAIEDGmfKRCao7aJoq19aqoqjsWKUYs_AAJZHQACIAH5VBOyW_iQUkpVOgQ"
 ANDLUA_FILE_ID = "BQACAgUAAxkBAAIECGmfKDEgnHs85TrdnBu9zRYoaXpgAAJSHQACIAH5VMFBC36WUb26OgQ"
 DUAL_FILE_ID = "BQACAgUAAxkBAAIECmmfKLtu5QOKjzG1zScNZCOG2e5uAAJYHQACIAH5VMkZ7jvEeEguOgQ"
 TERMUX_FILE_ID = "BQACAgUAAxkBAAIEDmmfKUMpTKGZm4jMgbSgKIp72k-hAAJaHQACIAH5VK7Esi8AAZ7fojoE"
-SCRIPT_FILE_ID = "BQACAgUAAyEFAATC_WD3AAKpXGm5UJHWb4Na3q3TRUBDLi4v7GinAAKlHwAC_hzIVTMQgt1ocAUiOgQ"
-INJECTOR_FILE_ID = "BQACAgUAAxkBAAIFv2m1OqJ1K-VcXv7X9csBOSiXoJ_hAAJaHAAC_LmoVVUY057NHLqgOgQ"
-AMY_FILE_ID = "BQACAgUAAyEFAATC_WD3AAKnOmm2VopEy0Vc_BOdmto5-1N53P-ZAAJMGgACPL-5VRbdmmqlskYeOgQ"
+SCRIPT_FILE_ID = "BQACAgUAAxkBAAIEZGmgFB0Dkd84qMbkfgfZ1YF2Zjj-AALSGgACoCYJVUsyAikdnV6BOgQ"
 
 BOT_ACTIVE = True  # Default na naka-ON ang bot
 
@@ -122,6 +109,8 @@ async def moderate(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
 # ===== START COMMAND =====
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not BOT_ACTIVE:
+        return
     user = update.effective_user
     full_name = user.full_name.strip() if user and user.full_name else "Player"
 
@@ -139,6 +128,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(start_message)
     
 async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not BOT_ACTIVE:
+        return
     chat = update.effective_chat
     msg = update.message
     if not msg or not msg.new_chat_members:
@@ -158,6 +149,8 @@ async def welcome(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await chat.send_message(welcome_message, disable_web_page_preview=True)
 # ===== /HELP COMMAND =====
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not BOT_ACTIVE:
+        return
     help_text = (
         "🤖 <b>ROSE HELP MENU</b>\n\n"
 
@@ -277,7 +270,8 @@ from datetime import datetime
 import pytz
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
+    if not BOT_ACTIVE:
+        return
     global pending_game, roll_cooldown_active
 
     msg = update.message
@@ -290,17 +284,12 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # ================= TOOLS DETECTION =================
 
-    # 1. GAMEGUARDIAN
-    if re.search(r"\bgame\s?guardian\b", text_lower):
+    # 1. GAMEGUARDIAN (Strict)
+    if re.search(r"\bgame\s?guardian+\b", text_lower):
         try:
             await msg.reply_document(
-                document=GG_FILE_ID,
-                caption=(
-                    "🛠 **GameGuardian Tool**\n\n"
-                    "Supported for high Android devices.\n"
-                    "Use this tool for memory editing and advanced modding.\n\n"
-                    "⚠ Make sure your device supports GameGuardian before using."
-                ),
+                document=GG_FILE_ID, 
+                caption="✅ **GameGuardian supported high Android device**", 
                 parse_mode="Markdown"
             )
             return
@@ -308,16 +297,11 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             print(f"Error GG: {e}")
 
     # 2. MT MANAGER
-    if re.search(r"\bmt\s?manager\b", text_lower):
+    if re.search(r"\bmt\s*manager+\b", text_lower):
         try:
             await msg.reply_document(
-                document=MT_FILE_ID,
-                caption=(
-                    "📦 **MT Manager**\n\n"
-                    "A powerful APK editor and file manager.\n"
-                    "Perfect for editing files, scripts, and modding APKs.\n\n"
-                    "✔ Recommended tool for advanced Android users."
-                ),
+                document=MT_FILE_ID, 
+                caption="✅ **MT Manager supported high Android device**", 
                 parse_mode="Markdown"
             )
             return
@@ -325,16 +309,11 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             print(f"Error MT: {e}")
 
     # 3. ANDLUA
-    if re.search(r"\bandlua\b", text_lower):
+    if re.search(r"\bandlua+\b", text_lower):
         try:
             await msg.reply_document(
-                document=ANDLUA_FILE_ID,
-                caption=(
-                    "⚙ **AndLua+ Lua Environment**\n\n"
-                    "Used for running Lua scripts on Android.\n"
-                    "Required for executing custom scripts and automation.\n\n"
-                    "✔ Install and run your Lua scripts easily."
-                ),
+                document=ANDLUA_FILE_ID, 
+                caption="✅ **AndLua+ for Lua Scripting**", 
                 parse_mode="Markdown"
             )
             return
@@ -342,50 +321,23 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             print(f"Error AndLua: {e}")
 
     # 4. DUALSPACE
-    if re.search(r"\bdual\s?space\b", text_lower):
+    if re.search(r"\bdual\s?space+\b", text_lower):
         try:
             await msg.reply_document(
-                document=DUAL_FILE_ID,
-                caption=(
-                    "📱 **Dual Space (No Virtual)**\n\n"
-                    "Clone apps easily on high Android devices.\n"
-                    "Allows you to run multiple instances of apps.\n\n"
-                    "✔ Recommended for injector and testing setups."
-                ),
+                document=DUAL_FILE_ID, 
+                caption="✅ **Dual Space (No Virtual) for High Android**", 
                 parse_mode="Markdown"
             )
             return
         except Exception as e:
             print(f"Error DualSpace: {e}")
-            
-        # Amy virtual
-    if re.search(r"\bamy\s?virtual\b", text_lower):
-        try:
-            await msg.reply_document(
-                document=AMY_FILE_ID,
-                caption=(
-                    "📱 **Amy Virtual (No Virtual)**\n\n"
-                    "FIXED! ❌ Error: Cannot Access Memory (Check Root)\n"
-                    "For device-specific issues, use this virtual method only.\n\n"
-                    "✔ Recommended for injector and testing setups."
-                ),
-                parse_mode="Markdown"
-            )
-            return
-        except Exception as e:
-            print(f"Error Amy: {e}")
-            
+
     # 5. TERMUX
-    if re.search(r"\btermux\b", text_lower):
+    if re.search(r"\btermux+\b", text_lower):
         try:
             await msg.reply_document(
-                document=TERMUX_FILE_ID,
-                caption=(
-                    "💻 **Termux (F-Droid Version)**\n\n"
-                    "A powerful terminal emulator for Android.\n"
-                    "Run Linux commands and install developer tools.\n\n"
-                    "✔ Best for advanced users and developers."
-                ),
+                document=TERMUX_FILE_ID, 
+                caption="✅ **Termux (F-Droid) for Shell Commands**", 
                 parse_mode="Markdown"
             )
             return
@@ -393,42 +345,17 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             print(f"Error Termux: {e}")
 
     # 6. CODM SCRIPT
-    if re.search(r"\bcodm\s?script\b", text_lower):
+    if re.search(r"\bcodm\s?script+\b", text_lower):
         try:
             await msg.reply_document(
-                document=SCRIPT_FILE_ID,
-                caption=(
-                    "🔥 **CODM Premium Script**\n\n"
-                    "Exclusive script developed by **@KAZEHAYAMODZ**.\n"
-                    "Optimized for better performance and stability.\n\n"
-                    "✔ Make sure you are using the latest injector version."
-                ),
+                document=SCRIPT_FILE_ID, 
+                caption="✅ **CODM Premium Script by @KAZEHAYAMODZ**", 
                 parse_mode="Markdown"
             )
             return
         except Exception as e:
             print(f"Error Script: {e}")
 
-    # 7. CODM INJECTOR
-    if re.search(r"\bcodm\s?(injector|inj)\b", text_lower):
-        try:
-            await msg.reply_document(
-                document=INJECTOR_FILE_ID,
-                caption=(
-                    "🚀 **CODM Injector – New Update v5.0**\n\n"
-                    "All core features are included in this version:\n\n"
-                    "✔ Updated Injector System\n"
-                    "✔ Key Generator Access\n"
-                    "✔ Secure Device Lock System\n\n"
-                    "📌 Generate your key from the website before using the injector.\n"
-                    "📌 Make sure your injector is updated to avoid errors.\n\n"
-                    "Enjoy the latest version! 🔥"
-                ),
-                parse_mode="Markdown"
-            )
-            return
-        except Exception as e:
-            print(f"Error Injector: {e}")
     # ================= EXISTING HANDLERS (Kaze, Phia, etc.) =================
     # ===== NAMES / SPECIAL =====
     if re.search(r"\bkaze+\b", text_lower):
@@ -501,7 +428,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await msg.reply_text(" Yow ano topic pwedy makisali?")
         return
 
-    if re.search(r"\bslyd+\b", text_lower):
+    if re.search(r"\bSlyd+\b", text_lower):
         await msg.reply_text(" madamot ako eh🫤")
         return
 
@@ -531,10 +458,6 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if re.search(r"\bpls+\b", text_lower):
         await msg.reply_text(" Bigyan nyona ouh nakakaawa")
-        return
-
-    if re.search(r"\bsticker+\b", text_lower):
-        await msg.reply_text(" Gusto mo gawin kitang sticker papilit kita sa pader")
         return
     # ===== PICK NUMBER (1–6 ONLY) =====
     if text_lower not in ["1", "2", "3", "4", "5", "6"]:
@@ -738,105 +661,56 @@ async def filters_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         " - `andlua`\n"
         " - `termux`\n"
         " - `dual space`\n"
-        " - `amy virtual`\n"
         " - `codm script`\n"
-        " - `getfreekey`\n"
-        " - `codm injector`\n\n"
+        " - `getfreekey`\n\n"
         "💡 *Tip: Tap the name to copy, then paste and send to get the file!*"
     )
     
     await update.message.reply_text(filters_text, parse_mode="Markdown")
 
-OWNER_ID = 7201369115  # palitan mo ng owner ID mo
-
-async def rose(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def toggle_bot(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global BOT_ACTIVE
+    
     user_id = update.effective_user.id
     chat_id = update.effective_chat.id
 
-    # OWNER check
-    is_owner = OWNER_ID and user_id == OWNER_ID
-
-    # ADMIN check
-    is_admin_user = False
-    if not is_owner:
-        member = await context.bot.get_chat_member(chat_id, user_id)
-        if member.status in ("administrator", "creator"):
-            is_admin_user = True
-
-    if not (is_owner or is_admin_user):
-        return
-
-    keyboard = [
-        [
-            InlineKeyboardButton("🌹 Rose ON", callback_data="rose_on"),
-            InlineKeyboardButton("💤 Rose OFF", callback_data="rose_off"),
-        ]
-    ]
-
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    await update.message.reply_text(
-        "🌹 *Rose Control Panel*\nPili ka lang:",
-        reply_markup=reply_markup,
-        parse_mode="Markdown"
-    )
-
-
-async def rose_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global BOT_ACTIVE
-
-    query = update.callback_query
-    user_id = query.from_user.id
-    chat_id = query.message.chat.id
-
-    await query.answer()
-
-    # OWNER check
-    is_owner = OWNER_ID and user_id == OWNER_ID
-
-    # ADMIN check
-    is_admin_user = False
-    if not is_owner:
-        member = await context.bot.get_chat_member(chat_id, user_id)
-        if member.status in ("administrator", "creator"):
-            is_admin_user = True
-
-    if not (is_owner or is_admin_user):
-        return
-
-    if query.data == "rose_on":
-        if BOT_ACTIVE:
-            await query.edit_message_text("😴 Gising na gising napo ako.")
-        else:
-            BOT_ACTIVE = True
-            await query.edit_message_text("🟢 *Rose is now ON.* Balik na tayo sa trabaho!", parse_mode="Markdown")
-
-    elif query.data == "rose_off":
-        if not BOT_ACTIVE:
-            await query.edit_message_text("😌 Maka tulog narin sa wakas.")
-        else:
-            BOT_ACTIVE = False
-            await query.edit_message_text("🔴 *Rose is now OFF.*", parse_mode="Markdown")
-
-    # after 5 seconds show buttons again
-    await asyncio.sleep(5)
-
-    keyboard = [
-        [
-            InlineKeyboardButton("🌹 Rose ON", callback_data="rose_on"),
-            InlineKeyboardButton("💤 Rose OFF", callback_data="rose_off"),
-        ]
-    ]
-
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    await context.bot.send_message(
-        chat_id=chat_id,
-        text="🌹 *Rose Control Panel*",
-        reply_markup=reply_markup,
-        parse_mode="Markdown"
-    )
+    # 1. Check kung OWNER (Bypass agad)
+    is_owner = (OWNER_ID and user_id == OWNER_ID)
     
+    # 2. Check kung ADMIN
+    is_admin_user = False
+    if not is_owner:
+        member = await context.bot.get_chat_member(chat_id, user_id)
+        if member.status in ("administrator", "creator"):
+            is_admin_user = True
+
+    # Kung hindi owner at hindi admin, deadma lang ang bot
+    if not (is_owner or is_admin_user):
+        return
+
+    # Logic para sa ON/OFF
+    if not context.args:
+        await update.message.reply_text("❓ Usage: `/Rose on` o `/Rose off`", parse_mode="Markdown")
+        return
+
+    choice = context.args[0].lower()
+
+    if choice == "off":
+        if not BOT_ACTIVE:
+            await update.message.reply_text("Maka tulog narin sa wakas🫰")
+            return
+        BOT_ACTIVE = False
+        await update.message.reply_text("🔴 **Rose is now OFF.**")
+        print(f"Bot disabled by: {user_id}")
+        
+    elif choice == "on":
+        if BOT_ACTIVE:
+            await update.message.reply_text(" Gising na gising napo ako🥱")
+            return
+        BOT_ACTIVE = True
+        await update.message.reply_text("🟢 **Rose is now ON.** Balik na tayo sa trabaho!")
+        print(f"Bot enabled by: {user_id}")
+
 import requests
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
@@ -898,15 +772,6 @@ async def get_file_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
 OWNER_ID = 7201369115  # <--- Palitan mo ito ng User ID mo (yung number lang)
 TARGET_DC_ID = -1003271385335  # <--- Ito yung nakuha mo sa screenshot
 
-async def get_file_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.message.document:
-        f_id = update.message.document.file_id
-        await update.message.reply_text(f"✅ **FILE ID OBTAINED:**\n\n`{f_id}`", parse_mode="Markdown")
-        print(f"File ID: {f_id}") # Lalabas din ito sa console mo
-
-OWNER_ID = 7201369115  # <--- Palitan mo ito ng User ID mo (yung number lang)
-TARGET_DC_ID = -1003271385335  # <--- Ito yung nakuha mo sa screenshot
-
 async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Check kung sino ang nag-utos (Dapat ikaw lang ang boss)
     user_id = update.effective_user.id
@@ -944,7 +809,6 @@ def main():
         raise RuntimeError("Missing TELEGRAM_TOKEN env var.")
 
     app = Application.builder().token(token).build()
-
     app.add_handler(MessageHandler(filters.Document.ALL, get_file_id))
 
     # ===== COMMANDS =====
@@ -952,19 +816,12 @@ def main():
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("report", report_user))
     app.add_handler(CommandHandler("filters", filters_command))
-
-    # 🌹 ROSE INLINE CONTROL
-    app.add_handler(CommandHandler("rose", rose))
-    app.add_handler(CallbackQueryHandler(rose_button, pattern="rose_"))
-
-    # 🔑 KEY COMMANDS
+    app.add_handler(CommandHandler("Rose", toggle_bot))
     app.add_handler(CommandHandler("getfreekey", Getfreekey))
     app.add_handler(CommandHandler("key", Getfreekey))
     app.add_handler(MessageHandler(filters.Regex(r'(?i)^Getfreekey$'), Getfreekey))
-
-    # 📢 BROADCAST
     app.add_handler(CommandHandler("broadcast", broadcast))
-
+    
     # ===== GAME COMMANDS =====
     app.add_handler(CommandHandler("roll", roll))
     app.add_handler(CommandHandler("reroll", reroll))
@@ -1000,3 +857,4 @@ def main():
 if __name__ == "__main__":
     keep_alive()
     main()
+    
