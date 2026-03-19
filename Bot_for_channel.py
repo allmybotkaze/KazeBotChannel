@@ -1002,17 +1002,9 @@ async def main_async():
         group=1
     )
 
-    # ✅ FINAL RUN (FIXED)
-    await application.run_polling(allowed_updates=Update.ALL_TYPES)
+    app.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
-# ===== RUN APP =====
 if __name__ == "__main__":
-    # 1️⃣ Keep your Flask web server alive in the background
     keep_alive()
-
-    # 2️⃣ Run the Telegram bot safely with asyncio.run()
-    try:
-        asyncio.run(main_async())
-    except (KeyboardInterrupt, SystemExit):
-        print("Bot stopped.")
+    main()
