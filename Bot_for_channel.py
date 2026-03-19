@@ -938,57 +938,49 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"❌ <b>Error:</b> {e}", parse_mode="HTML")
         
 # ===== MAIN FUNCTION =====
-import asyncio
-import os
-from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters
-
-# ===== MAIN FUNCTION =====
-async def main_async():
+def main():
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     if not token:
-        print("❌ Error: TELEGRAM_BOT_TOKEN is missing in Environment Variables!")
-        return
+        raise RuntimeError("Missing TELEGRAM_TOKEN env var.")
 
-    application = Application.builder().token(token).build()
+    app = Application.builder().token(token).build()
 
-    # ===== HANDLERS =====
-    application.add_handler(MessageHandler(filters.Document.ALL, get_file_id))
+    app.add_handler(MessageHandler(filters.Document.ALL, get_file_id))
 
-    # COMMANDS
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("help", help_command))
-    application.add_handler(CommandHandler("report", report_user))
-    application.add_handler(CommandHandler("filters", filters_command))
+    # ===== COMMANDS =====
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CommandHandler("report", report_user))
+    app.add_handler(CommandHandler("filters", filters_command))
 
-    # ROSE
-    application.add_handler(CommandHandler("rose", rose))
-    application.add_handler(CallbackQueryHandler(rose_button, pattern="rose_"))
+    # 🌹 ROSE INLINE CONTROL
+    app.add_handler(CommandHandler("rose", rose))
+    app.add_handler(CallbackQueryHandler(rose_button, pattern="rose_"))
 
-    # KEY
-    application.add_handler(CommandHandler("getfreekey", Getfreekey))
-    application.add_handler(CommandHandler("key", Getfreekey))
-    application.add_handler(MessageHandler(filters.Regex(r'(?i)^Getfreekey$'), Getfreekey))
+    # 🔑 KEY COMMANDS
+    app.add_handler(CommandHandler("getfreekey", Getfreekey))
+    app.add_handler(CommandHandler("key", Getfreekey))
+    app.add_handler(MessageHandler(filters.Regex(r'(?i)^Getfreekey$'), Getfreekey))
 
-    # BROADCAST
-    application.add_handler(CommandHandler("broadcast", broadcast))
+    # 📢 BROADCAST
+    app.add_handler(CommandHandler("broadcast", broadcast))
 
-    # GAME
-    application.add_handler(CommandHandler("roll", roll))
-    application.add_handler(CommandHandler("reroll", reroll))
-    application.add_handler(CommandHandler("stoproll", stoproll))
-    application.add_handler(CommandHandler("runroll", runroll))
-    application.add_handler(CommandHandler("cancelroll", cancelroll))
-    application.add_handler(CommandHandler("switchkuri", switch_kuri))
-    application.add_handler(CommandHandler("switchkaze", switch_kaze))
+    # ===== GAME COMMANDS =====
+    app.add_handler(CommandHandler("roll", roll))
+    app.add_handler(CommandHandler("reroll", reroll))
+    app.add_handler(CommandHandler("stoproll", stoproll))
+    app.add_handler(CommandHandler("runroll", runroll))
+    app.add_handler(CommandHandler("cancelroll", cancelroll))
+    app.add_handler(CommandHandler("switchkuri", switch_kuri))
+    app.add_handler(CommandHandler("switchkaze", switch_kaze))
 
-    # WELCOME
-    application.add_handler(
+    # ===== WELCOME =====
+    app.add_handler(
         MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome)
     )
 
-    # MODERATION (FIRST)
-    application.add_handler(
+    # ===== 🚨 MODERATION FIRST =====
+    app.add_handler(
         MessageHandler(
             (filters.TEXT | filters.CAPTION | filters.FORWARDED) & ~filters.COMMAND,
             moderate
@@ -996,8 +988,8 @@ async def main_async():
         group=0
     )
 
-    # MAIN TEXT
-    application.add_handler(
+    # ===== MAIN TEXT HANDLER =====
+    app.add_handler(
         MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text),
         group=1
     )
