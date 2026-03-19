@@ -938,49 +938,50 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"❌ <b>Error:</b> {e}", parse_mode="HTML")
         
 # ===== MAIN FUNCTION =====
-def main():
+async def main_async():
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     if not token:
-        raise RuntimeError("Missing TELEGRAM_BOT_TOKEN env var.")
+        # Siguraduhin na tugma ang pangalan dito sa Render Dashboard mo
+        print("❌ Error: TELEGRAM_BOT_TOKEN is missing in Environment Variables!")
+        return
 
-    app = Application.builder().token(token).build()
+    # Ginawa nating 'application' ang pangalan para safe sa v20+ standards
+    application = Application.builder().token(token).build()
 
-    app.add_handler(MessageHandler(filters.Document.ALL, get_file_id))
+    application.add_handler(MessageHandler(filters.Document.ALL, get_file_id))
 
     # ===== COMMANDS =====
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(CommandHandler("report", report_user))
-    app.add_handler(CommandHandler("filters", filters_command))
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CommandHandler("report", report_user))
+    application.add_handler(CommandHandler("filters", filters_command))
 
     # 🌹 ROSE INLINE CONTROL
-    app.add_handler(CommandHandler("rose", rose))
-    app.add_handler(CallbackQueryHandler(rose_button, pattern="rose_"))
+    application.add_handler(CommandHandler("rose", rose))
+    application.add_handler(CallbackQueryHandler(rose_button, pattern="rose_"))
 
     # 🔑 KEY COMMANDS
-    app.add_handler(CommandHandler("getfreekey", Getfreekey))
-    app.add_handler(CommandHandler("key", Getfreekey))
-    app.add_handler(MessageHandler(filters.Regex(r'(?i)^Getfreekey$'), Getfreekey))
+    application.add_handler(CommandHandler("getfreekey", Getfreekey))
+    application.add_handler(CommandHandler("key", Getfreekey))
+    application.add_handler(MessageHandler(filters.Regex(r'(?i)^Getfreekey$'), Getfreekey))
 
     # 📢 BROADCAST
-    app.add_handler(CommandHandler("broadcast", broadcast))
+    application.add_handler(CommandHandler("broadcast", broadcast))
 
     # ===== GAME COMMANDS =====
-    app.add_handler(CommandHandler("roll", roll))
-    app.add_handler(CommandHandler("reroll", reroll))
-    app.add_handler(CommandHandler("stoproll", stoproll))
-    app.add_handler(CommandHandler("runroll", runroll))
-    app.add_handler(CommandHandler("cancelroll", cancelroll))
-    app.add_handler(CommandHandler("switchkuri", switch_kuri))
-    app.add_handler(CommandHandler("switchkaze", switch_kaze))
+    application.add_handler(CommandHandler("roll", roll))
+    application.add_handler(CommandHandler("reroll", reroll))
+    application.add_handler(CommandHandler("stoproll", stoproll))
+    application.add_handler(CommandHandler("runroll", runroll))
+    application.add_handler(CommandHandler("cancelroll", cancelroll))
+    application.add_handler(CommandHandler("switchkuri", switch_kuri))
+    application.add_handler(CommandHandler("switchkaze", switch_kaze))
 
     # ===== WELCOME =====
-    app.add_handler(
-        MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome)
-    )
+    application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome))
 
     # ===== 🚨 MODERATION FIRST =====
-    app.add_handler(
+    application.add_handler(
         MessageHandler(
             (filters.TEXT | filters.CAPTION | filters.FORWARDED) & ~filters.COMMAND,
             moderate
@@ -989,14 +990,23 @@ def main():
     )
 
     # ===== MAIN TEXT HANDLER =====
-    app.add_handler(
+    application.add_handler(
         MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text),
         group=1
     )
 
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
-
+    # Tamang paraan ng pagpapatakbo sa v20+ para iwas Event Loop error
+    async with application:
+        await application.initialize()
+        await application.start_polling(allowed_updates=Update.ALL_TYPES)
+        await application.idle()
 
 if __name__ == "__main__":
+    # 1. Patakbuhin ang Flask (Keep Alive) sa background thread
     keep_alive()
-    main()
+    
+    # 2. Gamitin ang asyncio.run para i-handle ang event loop ng bot
+    try:
+        asyncio.run(main_async())
+    except (KeyboardInterrupt, SystemExit):
+        pass
