@@ -996,7 +996,6 @@ def main():
 
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
-
 if __name__ == "__main__":
     keep_alive()
-    main()
+    asyncio.run(main())
