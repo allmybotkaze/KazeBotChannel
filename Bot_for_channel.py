@@ -1008,28 +1008,11 @@ async def main_async():
 
 # ===== RUN APP =====
 if __name__ == "__main__":
-    # Patakbuhin ang Flask sa background thread
+    # 1️⃣ Keep your Flask web server alive in the background
     keep_alive()
-    
-    # Gumamit ng event loop na hindi manual
-    import asyncio
 
-    async def run_bot():
-        token = os.getenv("TELEGRAM_BOT_TOKEN")
-        if not token:
-            print("❌ TELEGRAM_BOT_TOKEN is missing!")
-            return
-
-        application = Application.builder().token(token).build()
-
-        # Add all handlers here
-        # ... [commands, message handlers, moderation, etc.]
-
-        async with application:
-            await application.initialize()
-            await application.start_polling()
-            await application.idle()
-
-    # Sa Render, simple lang: gamitin asyncio.create_task sa current loop
-    loop = asyncio.get_event_loop()
-    loop.create_task(run_bot())
+    # 2️⃣ Run the Telegram bot safely with asyncio.run()
+    try:
+        asyncio.run(main_async())
+    except (KeyboardInterrupt, SystemExit):
+        print("Bot stopped.")
