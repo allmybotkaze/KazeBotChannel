@@ -941,7 +941,7 @@ async def broadcast(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     if not token:
-        raise RuntimeError("Missing TELEGRAM_TOKEN env var.")
+        raise RuntimeError("Missing TELEGRAM_BOT_TOKEN env var.")
 
     app = Application.builder().token(token).build()
 
@@ -999,8 +999,4 @@ def main():
 
 if __name__ == "__main__":
     keep_alive()
-
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
-    loop.run_until_complete(application.run_polling())
+    main()
